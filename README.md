@@ -3,12 +3,11 @@
 ### Introduction
 C++ and SDL2 chess game.
 
-###
-Pieces ID
-0 - empty space
-1 - pawn
-2 - rook
-3 - knight
-4 - bishop
-5 - queen
-6 - king
+### Pieces ID
+- empty space - 0  
+- pawn - 1
+- rook - 2
+- knight - 3
+- bishop - 4
+- queen - 5
+- king - 7
