@@ -10,6 +10,8 @@
 const int WIDTH = 480;
 const int HEIGHT = 480;
 
+// TODO: Implement delta time
+
 struct Color {
 	int R, G, B;
 };
