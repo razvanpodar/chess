@@ -7,8 +7,8 @@
 
 #define DSDL_MAIN_HANDLED
 
-const int WIDTH = 480;
-const int HEIGHT = 480;
+const int WIDTH = 960;
+const int HEIGHT = 960;
 
 // TODO: Implement delta time
 
@@ -99,12 +99,13 @@ int main(int argc, char* argv[])
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 
-	Board board(WIDTH, HEIGHT);
+	Board board(renderer, WIDTH, HEIGHT);
 
 	SDL_Event event;
 	bool running = true;
 	int x = 0, y = 0;
 	int pointX = 4, pointY = 7;
+	int lastClickX = 0, lastClickY = 0;
 	bool isDragged = false;
 	bool isClicked = false;
 	Piece draggedPiece(-1, Type::Empty);
@@ -126,10 +127,9 @@ int main(int argc, char* argv[])
 					printf("Begin drag: %d, %d\n", x, y);
 					draggedPiece = board.GetPiece(x, y);
 					isDragged = true;
-					if (event.button.state == SDL_RELEASED)
-					{
-						isClicked = true;
-					}
+					lastClickX = x;
+					lastClickY = y;
+					printf("%d, %d\n", lastClickX, lastClickY);
 				default:
 					break;
 				}
@@ -151,7 +151,8 @@ int main(int argc, char* argv[])
 			}
 		}
 		
-		printf("%d\n", isDragged);
+		//SDL_RenderClear(renderer);
+		//printf("%d\n", isDragged);
 		//if (isClicked)
 		//{
 		//	printf("%d\n", isClicked);
@@ -160,8 +161,8 @@ int main(int argc, char* argv[])
 
 		//drawTileMap(renderer, WIDTH, HEIGHT, 8);
 
-
-		board.Update(renderer, isDragged, x, y, draggedPiece);
+		//printf("%d, %d\n", lastClickX, lastClickY);
+		board.Update(renderer, isDragged, x, y, draggedPiece, lastClickX, lastClickY);
 
 		//drawPiece(renderer, pointX, pointY, 60, 60);
 		//if (!isDragged) {

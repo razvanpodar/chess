@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SDL.h"
+
 enum class Type
 {
 	Empty, Pawn, Rook, Knight, Bishop, Queen, King
@@ -12,12 +14,20 @@ private:
 	// Might be a good idea to make it a boolean
 	int m_Side = -1;
 	Type m_Type = Type::Empty;
+	SDL_Texture* m_Texture = nullptr;
 
 public:
 	Piece();
 	Piece(int side, Type t);
-	void setSide(int side) { m_Side = side; }
-	void setType(Type t) { m_Type = t; }
-	int getSide() { return m_Side; }
-	Type getType() { return m_Type; }
+	void SetSide(int side) { m_Side = side; }
+	void SetType(Type t) { m_Type = t; }
+	int GetSide() { return m_Side; }
+	Type GetType() { return m_Type; }
+	void SetTexture(SDL_Texture *texture) { m_Texture = texture; }
+	SDL_Texture* GetTexture() { return m_Texture; }
+	void SetTypeAndTexture(Type type, SDL_Texture *texture) 
+	{ 
+		m_Type = type; 
+		m_Texture = texture; 
+	}
 };

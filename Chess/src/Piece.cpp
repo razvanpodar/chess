@@ -7,4 +7,3 @@ Piece::Piece()
 Piece::Piece(int side, Type t)
 	: m_Side(side), m_Type(t)
 { }
-

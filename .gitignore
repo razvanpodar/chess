@@ -19,6 +19,8 @@ mono_crash.*
 # Dependencies
 Dependencies/
 Chess/SDL2.dll
+Chess/*.dll
+Chess/*.lib
 
 # Build results
 [Dd]ebug/
