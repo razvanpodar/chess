@@ -10,4 +10,4 @@ C++ and SDL2 chess game.
 - knight - 3
 - bishop - 4
 - queen - 5
-- king - 7
+- king - 6

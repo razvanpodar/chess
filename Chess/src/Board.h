@@ -23,28 +23,32 @@ public:
 	// Or set type to Empty and check the type when rendering
 
 	const int m_Size = 8;
-	int m_ScreenWidth;
-	int m_ScreenHeight;
-	int m_TileWidth;
-	int m_TileHeight;
+	int m_ScreenWidth = 0;
+	int m_ScreenHeight = 0;
+	int m_TileWidth = 0;
+	int m_TileHeight = 0;
 	PixelColor m_BoardColor[2];
-
-	// This will be replaced with the texture of each piece
-	PixelColor m_PixelColor[8];
+	SDL_Renderer *m_Renderer;
 
 public:
-	Board(SDL_Renderer *renderer, int screenWidth, int screenHeight);
+	Board();
+	Board(int screenWidth, int screenHeight);
 	~Board();
 
-	void Update(SDL_Renderer *renderer, bool isDragged, int mousePosX, 
-		int mousePosY, Piece draggedPiece, int lastClickX, int lastClickY);
-	void UpdatePiece(SDL_Renderer* renderer, int mousePosX, int mousePosY, 
-		Piece draggedPiece, int lastClickX, int lastClickY);
-	void UpdatePieceByCoordinates(SDL_Renderer* renderer, int mousePosX, 
-		int mousePosY, Piece draggedPiece, int lastClickX, int lastClickY);
+	void Init(SDL_Window *window);
+	void Update(bool isDragged, int mousePosX, int mousePosY, Piece draggedPiece, 
+		int lastClickX, int lastClickY);
+	void UpdatePiece(int mousePosX, int mousePosY, Piece draggedPiece, 
+		int lastClickX, int lastClickY);
+	void UpdatePieceByCoordinates(int mousePosX, int mousePosY, Piece draggedPiece, 
+		int lastClickX, int lastClickY);
 	Piece GetPiece(int mousePosX, int mousePosY);
+	void SetScreenWidthAndHeight(int screenWidth, int screenHeight)
+	{
+		m_ScreenWidth = screenWidth;
+		m_ScreenHeight = screenHeight;
+	}
 private:
-	void Init(SDL_Renderer *renderer);
-	void DrawBoard(SDL_Renderer *renderer);
-	void DrawPieces(SDL_Renderer* renderer);
+	void DrawBoard();
+	void DrawPieces();
 };

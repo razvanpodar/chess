@@ -1,8 +1,24 @@
 #include "Board.h"
 #include "TextureManager.h"
 
-Board::Board(SDL_Renderer *renderer, int screenWidth, int screenHeight)
-	: m_ScreenWidth(screenWidth), m_ScreenHeight(screenHeight)
+Board::Board()
+{ }
+
+Board::Board(int screenWidth, int screenHeight)
+{
+	m_BoardColor[0] = { 69, 190, 100 };
+	m_BoardColor[1] = { 100, 25, 150 };
+
+	m_TileWidth = m_ScreenWidth / m_Size;
+	m_TileHeight = m_ScreenHeight / m_Size;
+}
+
+Board::~Board()
+{
+	SDL_DestroyRenderer(m_Renderer);
+}
+
+void Board::Init(SDL_Window *window)
 {
 	m_BoardColor[0] = { 69, 190, 100 };
 	m_BoardColor[1] = { 100, 25, 150 };
@@ -10,16 +26,8 @@ Board::Board(SDL_Renderer *renderer, int screenWidth, int screenHeight)
 	m_TileWidth = m_ScreenWidth / m_Size;
 	m_TileHeight = m_ScreenHeight / m_Size;
 
-	Init(renderer);
-}
+	m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-Board::~Board()
-{
-
-}
-
-void Board::Init(SDL_Renderer *renderer)
-{
 	TextureManager texMan;
 	// Initialize the location of each piece
 	for (int i = 0; i < m_Size; i++)
@@ -31,7 +39,7 @@ void Board::Init(SDL_Renderer *renderer)
 			// First or last row
 			if (j == 0 || j == m_Size - 1)
 			{
-				(j == 0) ? p.SetSide(0) : p.SetSide(1);
+				(j == 0) ? p.SetSide(1) : p.SetSide(0);
 				// Could be done with a switch 
 				// But the logic is better this way imo
 				if (i == 0)
@@ -74,63 +82,60 @@ void Board::Init(SDL_Renderer *renderer)
 					index = (p.GetSide() * 6) + 1;
 					p.SetType(Type::Rook);
 				}
-				printf("%s\n", (path + files[index]).c_str());
-				p.SetTexture(texMan.LoadTexture(renderer, (path + files[index]).c_str()));
+				p.SetTexture(texMan.LoadTexture(m_Renderer, (path + files[index]).c_str()));
 			}
 			else
 			{
 				// Second or second to last row
 				if (j == 1 || j == m_Size - 2)
 				{
-					(j == 1) ? p.SetSide(0) : p.SetSide(1);
+					(j == 1) ? p.SetSide(1) : p.SetSide(0);
 					index = p.GetSide() * 6;
 					p.SetType(Type::Pawn);
 				}
-				p.SetTexture(texMan.LoadTexture(renderer, (path + files[index]).c_str()));
+				p.SetTexture(texMan.LoadTexture(m_Renderer, (path + files[index]).c_str()));
 			}
-			if (p.GetType() == Type::Empty) printf("Empty\n");
+			//if (p.GetType() == Type::Empty) printf("Empty\n");
 			m_Board[i][j] = p;
 		}
 	}
 }
 
-void Board::Update(SDL_Renderer *renderer, bool isDragged, int mousePosX, 
+void Board::Update(bool isDragged, int mousePosX, 
 	int mousePosY, Piece draggedPiece, int lastClickX, int lastClickY)
 {
 
 	// Draw board
-	DrawBoard(renderer);
+	DrawBoard();
 	//printf("%d, %d", lastClickX, lastClickY);
 	// if(isDragged)
 	// replace piece with 0 in board
 	// draw piece at cursor coordinates
 	if (!isDragged) {
-		UpdatePiece(renderer, mousePosX, mousePosY, draggedPiece, lastClickX, 
-			lastClickY);
+		UpdatePiece(mousePosX, mousePosY, draggedPiece, lastClickX, lastClickY);
 	} 
 	else
 	{
 		int x, y;
 		SDL_GetMouseState(&x, &y);
-		UpdatePieceByCoordinates(renderer, x, y, draggedPiece, lastClickX, 
-			lastClickY);
+		UpdatePieceByCoordinates(x, y, draggedPiece, lastClickX, lastClickY);
 	}
 
 	// Make move (logic)
 
 	// Draw pieces
-	DrawPieces(renderer);
-
+	DrawPieces();
+	SDL_RenderPresent(m_Renderer);
 }
 
-void Board::DrawBoard(SDL_Renderer *renderer)
+void Board::DrawBoard()
 {
 	for (int i = 0; i < m_Size; i++)
 	{
 		for (int j = 0; j < m_Size; j++)
 		{
 			int c = (i + j) % 2;
-			SDL_SetRenderDrawColor(renderer, m_BoardColor[c].R, m_BoardColor[c].G, 
+			SDL_SetRenderDrawColor(m_Renderer, m_BoardColor[c].R, m_BoardColor[c].G, 
 				m_BoardColor[c].B, 0);
 			SDL_Rect rect;
 			rect.x = i * m_TileWidth;
@@ -138,12 +143,12 @@ void Board::DrawBoard(SDL_Renderer *renderer)
 			rect.w = m_TileWidth;
 			rect.h = m_TileHeight;
 
-			SDL_RenderFillRect(renderer, &rect);
+			SDL_RenderFillRect(m_Renderer, &rect);
 		}
 	}
 }
 
-void Board::DrawPieces(SDL_Renderer* renderer)
+void Board::DrawPieces()
 {
 	float padPercent = 0.1;
 	int pad = m_TileWidth * padPercent;
@@ -155,7 +160,7 @@ void Board::DrawPieces(SDL_Renderer* renderer)
 
 			if (piece.GetType() == Type::Empty) continue;
 			//int index = static_cast<int>(piece.GetType());
-			//SDL_SetRenderDrawColor(renderer, m_PixelColor[index].R, 
+			//SDL_SetRenderDrawColor(m_Renderer, m_PixelColor[index].R, 
 			//	m_PixelColor[index].B, m_PixelColor[index].G, 0);
 			int rectWidth = m_TileWidth - (2 * pad);
 			int rectHeight = m_TileHeight - (2 * pad);
@@ -166,15 +171,15 @@ void Board::DrawPieces(SDL_Renderer* renderer)
 			rect.w = rectWidth;
 			rect.h = rectHeight;
 
-			SDL_RenderCopy(renderer, piece.GetTexture(), NULL, &rect);
+			SDL_RenderCopy(m_Renderer, piece.GetTexture(), NULL, &rect);
 
-			//SDL_RenderFillRect(renderer, &rect);
+			//SDL_RenderFillRect(m_Renderer, &rect);
 		}
 	}
 }
 
-void Board::UpdatePiece(SDL_Renderer* renderer, int mousePosX, int mousePosY, 
-	Piece draggedPiece, int lastClickX, int lastClickY)
+void Board::UpdatePiece(int mousePosX, int mousePosY, Piece draggedPiece, 
+	int lastClickX, int lastClickY)
 {
 	int posX = mousePosX / m_TileWidth;
 	int posY = mousePosY / m_TileHeight;
@@ -191,18 +196,24 @@ void Board::UpdatePiece(SDL_Renderer* renderer, int mousePosX, int mousePosY,
 		if ((posX != lastPosX) || (posY != lastPosY))
 		{
 			// Move piece
-			printf("%d, %d\n", posX, posY);
-			printf("%d, %d\n", lastPosX, lastPosY);
+			//printf("%d, %d\n", posX, posY);
+			//printf("%d, %d\n", lastPosX, lastPosY);
 			m_Board[posX][posY] = draggedPiece;
 			// Set initial position to empty
 			Piece p(-1, Type::Empty);
 			m_Board[lastPosX][lastPosY] = p;
+		} 
+		else
+		{
+			// Check for viable moves
+			// Mark the possitions of all moves on the board
+			printf("same pos\n");
 		}
 	}
 }	
 
-void Board::UpdatePieceByCoordinates(SDL_Renderer* renderer, int mousePosX, 
-	int mousePosY, Piece draggedPiece, int lastClickX, int lastClickY)
+void Board::UpdatePieceByCoordinates(int mousePosX, int mousePosY, 
+	Piece draggedPiece, int lastClickX, int lastClickY)
 {
 	int posX = mousePosX / m_TileWidth;
 	int posY = mousePosY / m_TileHeight;
@@ -231,7 +242,7 @@ void Board::UpdatePieceByCoordinates(SDL_Renderer* renderer, int mousePosX,
 			rect.w = rectSize;
 			rect.h = rectSize;
 
-			SDL_RenderCopy(renderer, draggedPiece.GetTexture(), NULL, &rect);
+			SDL_RenderCopy(m_Renderer, draggedPiece.GetTexture(), NULL, &rect);
 		}
 	}
 }
