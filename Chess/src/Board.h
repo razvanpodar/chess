@@ -18,7 +18,8 @@ class Board
 {
 public:
 	// The type will be replaced with the class Piece
-	Piece m_Board[8][8];
+	Piece m_Board[8][8] = { Piece(-1, Type::Empty) };
+	int m_Moves[8][8] = { 0 };
 	// For the empty spaces set to null 
 	// Or set type to Empty and check the type when rendering
 
@@ -30,12 +31,15 @@ public:
 	PixelColor m_BoardColor[2];
 	SDL_Renderer *m_Renderer;
 
+	bool m_Turn = 1;
+
 public:
 	Board();
 	Board(int screenWidth, int screenHeight);
 	~Board();
 
 	void Init(SDL_Window *window);
+	void Reset();
 	void Update(bool isDragged, int mousePosX, int mousePosY, Piece draggedPiece, 
 		int lastClickX, int lastClickY);
 	void UpdatePiece(int mousePosX, int mousePosY, Piece draggedPiece, 
@@ -51,4 +55,7 @@ public:
 private:
 	void DrawBoard();
 	void DrawPieces();
+	void DrawMoves();
+	void FindLegalMoves(int x, int y, Piece piece);
+	void ResetLegalMoves();
 };

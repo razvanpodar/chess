@@ -68,35 +68,22 @@ void Chess::Update()
 			default:
 				break;
 			}
+		case SDL_KEYDOWN:
+			switch (m_Event.key.keysym.sym)
+			{
+			case SDLK_r:
+				draggedPiece = Piece(-1, Type::Empty);
+				m_Board.Reset();
+			default:
+				break;
+			}
 		default:
 			break;
 		}
 	}
-	//SDL_RenderClear(renderer);
-	//printf("%d\n", isDragged);
-	//if (isClicked)
-	//{
-	//	printf("%d\n", isClicked);
-	//	isClicked = false;
-	//}
 
-	//drawTileMap(renderer, WIDTH, HEIGHT, 8);
-
-	//printf("%d, %d\n", lastClickX, lastClickY);
 	m_Board.Update(isDragged, x, y, draggedPiece, lastClickX, lastClickY);
-
-	//drawPiece(renderer, pointX, pointY, 60, 60);
-	//if (!isDragged) {
-	//	drawPiece(renderer, x / 60, y / 60, 60, 60);
-	//} 
-	//else
-	//{
-	//	SDL_GetMouseState(&x, &y);
-	//	drawPieceByCoords(renderer, x, y);
-	//}
-
-	// SDL_RenderFillRect(renderer, &rect);
-
+	SDL_RenderClear(m_Board.m_Renderer);
 }
 
 
