@@ -58,4 +58,12 @@ private:
 	void DrawMoves();
 	void FindLegalMoves(int x, int y, Piece piece);
 	void ResetLegalMoves();
+	bool LegalSquare(int x, int y, Piece piece);
+
+	void PawnLegalMoves(int x, int y, Piece piece);
+	void RookLegalMoves(int x, int y, Piece piece);
+	void KnightLegalMoves(int x, int y, Piece piece);
+	void BishopLegalMoves(int x, int y, Piece piece);
+	void QueenLegalMoves(int x, int y, Piece piece);
+	void KingLegalMoves(int x, int y, Piece piece);
 };

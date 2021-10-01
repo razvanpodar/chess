@@ -6,12 +6,12 @@
 // Piece InitialBoard[8][8] = { Piece(-1, Type::Empty) };
 int InitialBoard[8][8] = { -2, -3, -4, -5, -6, -4, -3, -2,
 						   -1, -1, -1, -1, -1, -1, -1, -1,
-							0,  0,  0,  0,  0,  0,  0,  0,
-							0,  0,  0,  0,  0,  0,  0,  0,
-							0,  0,  0,  0,  0,  0,  0,  0,
-							0,  0,  0,  0,  0,  0,  0,  0,
-							1,	1,	1,	1,	1,	1,	1,	1,
-							2,	3,	4,	5,	6,	4,	3,	2 };
+						    0,  0,  0,  0,  0,  0,  0,  0,
+						    0,  0,  0,  0,  0,  0,  0,  0,
+						    0,  0,  0,  0,  0,  0,  0,  0,
+						    0,  0,  0,  0,  0,  0,  0,  0,
+						    1,  1,  1,  1,  1,  1,  1,  1,
+						    2,  3,  4,  5,  6,  4,  3,  2 };
 
 Board::Board()
 { }
@@ -22,7 +22,7 @@ Board::Board(int screenWidth, int screenHeight)
 	//m_BoardColor[1] = { 100, 25, 150 };
 
 	m_BoardColor[0] = { 220, 210, 150 };
-	m_BoardColor[1] = { 120, 80, 10 };
+	m_BoardColor[1] = { 120,  80,  10 };
 
 	m_TileWidth = m_ScreenWidth / m_Size;
 	m_TileHeight = m_ScreenHeight / m_Size;
@@ -39,7 +39,7 @@ void Board::Init(SDL_Window *window)
 	//m_BoardColor[1] = { 100, 25, 150 };
 
 	m_BoardColor[0] = { 220, 210, 150 };
-	m_BoardColor[1] = { 120, 80, 10 };
+	m_BoardColor[1] = { 120,  80,  10 };
 
 	m_TileWidth = m_ScreenWidth / m_Size;
 	m_TileHeight = m_ScreenHeight / m_Size;
@@ -137,9 +137,6 @@ void Board::DrawPieces()
 			Piece piece = m_Board[i][j];
 
 			if (piece.GetType() == Type::Empty) continue;
-			//int index = static_cast<int>(piece.GetType());
-			//SDL_SetRenderDrawColor(m_Renderer, m_PixelColor[index].R, 
-			//	m_PixelColor[index].B, m_PixelColor[index].G, 0);
 
 			SDL_Rect rect;
 			rect.x = (i * m_TileWidth) + pad;
@@ -168,11 +165,8 @@ void Board::DrawMoves()
 			if (m_Moves[i][j] != 0)
 			{
 				int v = m_Moves[i][j] - 1;
-				printf("%d\n", v);
 				SDL_SetRenderDrawColor(m_Renderer, rectColor[v].R, rectColor[v].G, 
 					rectColor[v].B, 0);
-
-				//SDL_RenderSetScale(m_Renderer, 4.0, 4.0);
 
 				SDL_Rect rect;
 				rect.x = i * m_TileWidth;
@@ -181,6 +175,9 @@ void Board::DrawMoves()
 				rect.h = m_TileHeight;
 
 				SDL_RenderFillRect(m_Renderer, &rect);
+
+				SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, 0);
+				SDL_RenderDrawRect(m_Renderer, &rect);
 			}
 		}
 	}
@@ -222,12 +219,16 @@ void Board::UpdatePiece(int mousePosX, int mousePosY, Piece draggedPiece,
 				// Return the piece to the initial possition if the move isn't legal
 				m_Board[lastPosX][lastPosY] = draggedPiece;
 			}
-		} 
+		}
 		else
 		{
 			// Check for legal moves
 			FindLegalMoves(posX, posY, draggedPiece);
 		}
+	}
+	else
+	{
+		ResetLegalMoves();
 	}
 }	
 
@@ -282,50 +283,24 @@ Piece Board::GetPiece(int mousePosX, int mousePosY)
 void Board::FindLegalMoves(int x, int y, Piece piece)
 {
 	// Reset the matrix containning the possible moves
-	for (int i = 0; i < m_Size; i++)
-	{
-		for (int j = 0; j < m_Size; j++)
-		{
-			m_Moves[i][j] = 0;
-		}
-	}
+	ResetLegalMoves();
 
 	if (piece.GetType() == Type::Empty())
-	{
 		return;
-	}
-	// Find all possible boxes the piece can move to
+
+	// Find all possible boxes the piece can move to based on the piece type
 	if (piece.GetType() == Type::Pawn)
-	{
-		if (piece.GetSide() == 0)
-		{
-			if (m_Board[x][y - 1].GetType() == Type::Empty)
-				m_Moves[x][y - 1] = 1;
-			if (m_Board[x - 1][y - 1].GetType() != Type::Empty 
-				&& m_Board[x - 1][y - 1].GetSide() == 1)
-				m_Moves[x - 1][y - 1] = 2;
-			if (m_Board[x + 1][y - 1].GetType() != Type::Empty
-				&& m_Board[x - 1][y - 1].GetSide() == 1)
-				m_Moves[x + 1][y - 1] = 2;
-
-		}
-		else
-		{
-			if (m_Board[x][y + 1].GetType() == Type::Empty)
-				m_Moves[x][y + 1] = 1;
-			if (m_Board[x - 1][y + 1].GetType() != Type::Empty
-				&& m_Board[x - 1][y + 1].GetSide() == 0)
-				m_Moves[x - 1][y + 1] = 2;
-			if (m_Board[x + 1][y + 1].GetType() != Type::Empty
-				&& m_Board[x - 1][y + 1].GetSide() == 0)
-				m_Moves[x + 1][y + 1] = 2;
-		}
-	}
-
+		PawnLegalMoves(x, y, piece);
 	if (piece.GetType() == Type::Rook)
-	{
-
-	}
+		RookLegalMoves(x, y, piece);
+	if (piece.GetType() == Type::Knight)
+		KnightLegalMoves(x, y, piece);
+	if (piece.GetType() == Type::Bishop)
+		BishopLegalMoves(x, y, piece);
+	if (piece.GetType() == Type::Queen)
+		QueenLegalMoves(x, y, piece);
+	if (piece.GetType() == Type::King)
+		KingLegalMoves(x, y, piece);
 }
 
 void Board::ResetLegalMoves()
@@ -338,3 +313,171 @@ void Board::ResetLegalMoves()
 		}
 	}
 }
+
+bool Board::LegalSquare(int x, int y, Piece piece)
+{
+	if (x >= 0 && x < m_Size && y >= 0 && y < m_Size)
+	{
+		if (m_Board[x][y].GetType() == Type::Empty())
+			m_Moves[x][y] = 1;
+		else
+		{
+			if (m_Board[x][y].GetSide() != piece.GetSide()
+				&& m_Board[x][y].GetType() != Type::King)
+			{
+				m_Moves[x][y] = 2;
+				return true;
+			}
+			else return true;
+		}
+	}
+	return false;
+}
+
+void Board::PawnLegalMoves(int x, int y, Piece piece)
+{
+	int c = 0;
+	if (piece.GetSide() == 0)
+		c = y - 1;
+	else 
+		c = y + 1;
+
+	if (m_Board[x][c].GetType() == Type::Empty)
+		m_Moves[x][c] = 1;
+	if (m_Board[x - 1][c].GetType() != Type::Empty
+		&& m_Board[x - 1][c].GetSide() != piece.GetSide()
+		&& m_Board[x - 1][c].GetType() != Type::King)
+		m_Moves[x - 1][c] = 2;
+	if (m_Board[x + 1][c].GetType() != Type::Empty
+		&& m_Board[x + 1][c].GetSide() != piece.GetSide()
+		&& m_Board[x + 1][c].GetType() != Type::King)
+		m_Moves[x + 1][c] = 2;
+}
+
+void Board::RookLegalMoves(int x, int y, Piece piece)
+{ 
+	// right
+	for (int i = x + 1; i < m_Size; i++)
+	{
+		if (LegalSquare(i, y, piece)) 
+			break;
+	}
+	// left
+	for (int i = x - 1; i >= 0; i--)
+	{
+		if (LegalSquare(i, y, piece)) 
+			break;
+	}
+	// up
+	for (int i = y - 1; i >= 0; i--)
+	{
+		if (LegalSquare(x, i, piece)) 
+			break;
+	}
+	// down
+	for (int i = y + 1; i < m_Size; i++)
+	{
+		if (LegalSquare(x, i, piece)) 
+			break;
+	}
+}
+
+void Board::KnightLegalMoves(int x, int y, Piece piece)
+{ 
+	int dirX[8] = { -2, -1,  1,  2,  2,  1, -1, -2 };
+	int dirY[8] = { -1, -2, -2, -1,  1,  2,  2,  1 };
+
+	int nX = 0;
+	int nY = 0;
+
+	for (int i = 0; i < 8; i++)
+	{
+		nX = x + dirX[i];
+		nY = y + dirY[i];
+
+		if (nX >= 0 && nX < m_Size && nY >= 0 && nY < m_Size)
+		{
+			if (m_Board[nX][nY].GetType() == Type::Empty())
+				m_Moves[nX][nY] = 1;
+			else
+			{
+				if (m_Board[nX][nY].GetSide() != piece.GetSide()
+					&& m_Board[nX][nY].GetType() != Type::King)
+				{
+					m_Moves[nX][nY] = 2;
+				}
+			}
+		}
+	}
+}
+
+void Board::BishopLegalMoves(int x, int y, Piece piece)
+{ 
+	int i = x - 1;
+	int j = y - 1;
+	while (i >= 0 && j >= 0)
+	{
+		if (LegalSquare(i, j, piece))
+			break;
+		i--;
+		j--;
+	}
+	i = x - 1;
+	j = y + 1;
+	while (i >= 0 && j < m_Size)
+	{
+		if (LegalSquare(i, j, piece))
+			break;
+		i--;
+		j++;
+	}
+	i = x + 1;
+	j = y - 1;
+	while (i < m_Size && j >= 0)
+	{
+		if (LegalSquare(i, j, piece))
+			break;
+		i++;
+		j--;
+	}
+	i = x + 1;
+	j = y + 1;
+	while (i < m_Size && j < m_Size)
+	{
+		if (LegalSquare(i, j, piece))
+			break;
+		i++;
+		j++;
+	}
+}
+
+void Board::QueenLegalMoves(int x, int y, Piece piece)
+{
+	RookLegalMoves(x, y, piece);
+	BishopLegalMoves(x, y, piece);
+	KingLegalMoves(x, y, piece);
+}
+
+void Board::KingLegalMoves(int x, int y, Piece piece)
+{
+	for (int i = -1; i < 2; i++)
+	{
+		for (int j = -1; j < 2; j++)
+		{
+			if (x + i >= 0 && x + i < m_Size && y + j >= 0 && y + j < m_Size)
+			{
+				if (m_Board[x + i][y + j].GetType() == Type::Empty)
+					m_Moves[x + i][y + j] = 1;
+				else
+				{
+					if (m_Board[x + i][y + j].GetSide() != piece.GetSide()
+						&& m_Board[x + i][y + j].GetType() != Type::King)
+					{
+						m_Moves[x + i][y + j] = 2;
+					}
+				}
+			}
+		}
+	}
+}
+

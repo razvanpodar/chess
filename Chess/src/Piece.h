@@ -16,6 +16,10 @@ private:
 	Type m_Type = Type::Empty;
 	SDL_Texture* m_Texture = nullptr;
 
+	// TODO: Add one more atribute called m_HasMoved
+	// for pawns' to be able to move 2 squares first time
+	// and for castling
+
 public:
 	Piece();
 	Piece(int side, Type t);

@@ -74,6 +74,7 @@ void Chess::Update()
 			case SDLK_r:
 				draggedPiece = Piece(-1, Type::Empty);
 				m_Board.Reset();
+				m_Board.m_Turn = 1;
 			default:
 				break;
 			}
