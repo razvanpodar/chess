@@ -151,12 +151,13 @@ void Board::DrawPieces()
 
 void Board::DrawMoves()
 {
-	PixelColor rectColor[2];
+	PixelColor rectColor[3];
 	//rectColor[0] = {   0, 255, 0 };
 	//rectColor[1] = { 255,   0, 0 };
 
 	rectColor[0] = { 125, 255, 100 };
 	rectColor[1] = { 250,  90,  70 };
+	rectColor[2] = {  80,  90, 250 };
 
 	for (int i = 0; i < m_Size; i++)
 	{
@@ -195,23 +196,51 @@ void Board::UpdatePiece(int mousePosX, int mousePosY, Piece draggedPiece,
 	// Check for invalid position
 	if (posX < 0 || posX > 7 || posY < 0 || posY > 7 || lastPosX < 0 
 		|| lastPosX > 7 || lastPosY < 0 || lastPosY > 7) return;
-	// Check if the location is a valid move
 
+	// Check if the location is a valid move
 	if (draggedPiece.GetType() != Type::Empty)
 	{
 		if (m_Turn == draggedPiece.GetSide()) return;
 		if ((posX != lastPosX) || (posY != lastPosY))
 		{
 			// Check if the move is legal
-			if (m_Moves[posX][posY])
+			if ((m_Moves[posX][posY] == 1) || (m_Moves[posX][posY] == 2))
 			{
+				// Save the removed piece
+				Piece removedPiece(-1, Type::Empty);
+				removedPiece = m_Board[posX][posY];
+				bool moved = draggedPiece.HasMoved();
+
 				// Move piece
+				draggedPiece.Moved();
 				m_Board[posX][posY] = draggedPiece;
 				// Set initial position to empty
 				Piece p(-1, Type::Empty);
 				m_Board[lastPosX][lastPosY] = p;
 				m_Turn = !m_Turn;
 
+				if (IsCheck(m_Turn))
+				{
+					m_Board[lastPosX][lastPosY] = draggedPiece;
+					m_Board[posX][posY] = removedPiece;
+					draggedPiece.SetMoved(moved);
+					m_Turn = !m_Turn;
+				}
+
+				// Update the variables with the kings' positions
+				// if the piece is a king before the move is completed verify if the 
+				// king will be in check if they mate the move and don't approve the 
+				// move if he will
+
+				if (draggedPiece.GetType() == Type::King)
+				{
+					if (draggedPiece.GetSide() == 0)
+						m_Wking = { posX, posY };
+					else
+						m_Bking = { posX, posY };
+				}
+				
+				// Reset moves
 				ResetLegalMoves();
 			}
 			else
@@ -246,8 +275,8 @@ void Board::UpdatePieceByCoordinates(int mousePosX, int mousePosY,
 	// Invalid position
 	if (posX < 0 || posX > 7 || posY < 0 || posY > 7 || lastPosX < 0 
 		|| lastPosX > 7 || lastPosY < 0 || lastPosY > 7) return;
+	
 	// Draw piece at mouse location
-
 	if (draggedPiece.GetType() != Type::Empty)
 	{
 		if (m_Turn == draggedPiece.GetSide()) return;
@@ -322,10 +351,12 @@ bool Board::LegalSquare(int x, int y, Piece piece)
 			m_Moves[x][y] = 1;
 		else
 		{
-			if (m_Board[x][y].GetSide() != piece.GetSide()
-				&& m_Board[x][y].GetType() != Type::King)
+			if (m_Board[x][y].GetSide() != piece.GetSide())
 			{
-				m_Moves[x][y] = 2;
+				if (m_Board[x][y].GetType() != Type::King)
+					m_Moves[x][y] = 2;
+				else
+					m_Moves[x][y] = 3;
 				return true;
 			}
 			else return true;
@@ -337,10 +368,17 @@ bool Board::LegalSquare(int x, int y, Piece piece)
 void Board::PawnLegalMoves(int x, int y, Piece piece)
 {
 	int c = 0;
+	int firstMove = 0;
 	if (piece.GetSide() == 0)
+	{
 		c = y - 1;
-	else 
+		firstMove = y - 2;
+	}
+	else
+	{
 		c = y + 1;
+		firstMove = y + 2;
+	}
 
 	if (m_Board[x][c].GetType() == Type::Empty)
 		m_Moves[x][c] = 1;
@@ -352,14 +390,20 @@ void Board::PawnLegalMoves(int x, int y, Piece piece)
 		&& m_Board[x + 1][c].GetSide() != piece.GetSide()
 		&& m_Board[x + 1][c].GetType() != Type::King)
 		m_Moves[x + 1][c] = 2;
+
+	if (!piece.HasMoved() && m_Board[x][firstMove].GetType() == Type::Empty)
+	{
+		m_Moves[x][firstMove] = 1;
+	}
 }
 
 void Board::RookLegalMoves(int x, int y, Piece piece)
 { 
+	printf("%d, %d - %d\n", x, y, static_cast<int>(piece.GetType()));
 	// right
 	for (int i = x + 1; i < m_Size; i++)
 	{
-		if (LegalSquare(i, y, piece)) 
+		if (LegalSquare(i, y, piece))
 			break;
 	}
 	// left
@@ -401,10 +445,12 @@ void Board::KnightLegalMoves(int x, int y, Piece piece)
 				m_Moves[nX][nY] = 1;
 			else
 			{
-				if (m_Board[nX][nY].GetSide() != piece.GetSide()
-					&& m_Board[nX][nY].GetType() != Type::King)
+				if (m_Board[nX][nY].GetSide() != piece.GetSide())
 				{
-					m_Moves[nX][nY] = 2;
+					if (m_Board[nX][nY].GetType() != Type::King)
+						m_Moves[nX][nY] = 2;
+					else
+						m_Moves[nX][nY] = 3;
 				}
 			}
 		}
@@ -479,5 +525,49 @@ void Board::KingLegalMoves(int x, int y, Piece piece)
 			}
 		}
 	}
+	// TODO: Castling
 }
 
+int Board::IsCheck(int side)
+{
+	// Verify if the king is in check
+	ResetLegalMoves();
+
+	for (int i = 0; i < m_Size; i++)
+	{
+		for (int j = 0; j < m_Size; j++)
+		{
+			if (m_Board[i][j].GetType() != Type::Empty)
+			{
+				if (m_Board[i][j].GetSide() != side)
+				{
+					FindLegalMoves(i, j, m_Board[i][j]);
+					if (side == 0 && m_Moves[m_Wking.x][m_Wking.y] != 0)
+						return 1;
+					if (side == 1 && m_Moves[m_Bking.x][m_Bking.y] != 0)
+						return 2;
+				}
+			}
+		}
+	}
+
+	ResetLegalMoves();
+
+	//for (int i = 0; i < m_Size; i++)
+	//{
+	//	for (int j = 0; j < m_Size; j++)
+	//	{
+	//		if (m_Moves[i][j] == 3)
+	//			return 1;
+	//	}
+	//}
+	
+	// Check the value at the king's position in the legal moves matrix
+	// If is not 0 then the king is in check
+	// For checkmate all the adjacent position of the king should be different 
+	// than 0
+
+	// return a specific code (e.g. 1 for check on white, 2 for check on black, 
+	// 3 for checkmate on white, 4 for checkmate on black, 0 for no check
+	return 0;
+}

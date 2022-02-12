@@ -13,12 +13,9 @@ private:
 	// Side - white or black
 	// Might be a good idea to make it a boolean
 	int m_Side = -1;
+	bool m_HasMoved = false;
 	Type m_Type = Type::Empty;
 	SDL_Texture* m_Texture = nullptr;
-
-	// TODO: Add one more atribute called m_HasMoved
-	// for pawns' to be able to move 2 squares first time
-	// and for castling
 
 public:
 	Piece();
@@ -34,4 +31,8 @@ public:
 		m_Type = type; 
 		m_Texture = texture; 
 	}
+	void Moved() { m_HasMoved = true; }
+	void SetMoved(bool moved) { m_HasMoved = moved; }
+	bool HasMoved() { return m_HasMoved; }
+
 };

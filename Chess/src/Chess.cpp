@@ -20,8 +20,6 @@ Chess::Chess(int WIDTH, int HEIGHT)
 
 Chess::~Chess()
 {
-	//free(m_Board);
-	//free(m_Event);
 	SDL_DestroyWindow(m_Window);
 	SDL_Quit();
 }
